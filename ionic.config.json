@@ -1,0 +1,7 @@
+{
+  "name": "McVEOS",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
