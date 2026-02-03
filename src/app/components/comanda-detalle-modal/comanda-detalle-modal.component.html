@@ -1,0 +1,186 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Comanda #{{ comanda.numeroComanda }}</ion-title>
+    <ion-buttons slot="start">
+      <ion-button (click)="imprimirComanda()">
+        <ion-icon name="print-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-buttons slot="end">
+      <ion-button (click)="cerrarModal()">
+        <ion-icon name="close"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <!-- Información general -->
+
+  <div id="print-comanda">
+    <!-- TODO: todo tu contenido actual de la comanda (ion-card, ion-list, etc.) -->
+    <!-- copia exactamente desde Información General hasta Resumen -->
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Información General</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item lines="none">
+          <ion-icon name="restaurant" slot="start" color="primary"></ion-icon>
+          <ion-label>
+            <h3>{{ comanda.mesa }}</h3>
+            <p>Mesa asignada</p>
+          </ion-label>
+        </ion-item>
+  
+        <ion-item lines="none">
+          <ion-icon name="time" slot="start" color="primary"></ion-icon>
+          <ion-label>
+            <h3>{{ getFechaFormateada() }}</h3>
+            <p>Fecha y hora del pedido</p>
+          </ion-label>
+        </ion-item>
+  
+        <ion-item lines="none">
+          <ion-icon name="cash" slot="start" color="success"></ion-icon>
+          <ion-label>
+            <h3>${{ formatearNumero(comanda.total) }}</h3>
+            <p>Total del pedido</p>
+          </ion-label>
+        </ion-item>
+  
+        <ion-item lines="none">
+          <ion-icon name="flag" slot="start" [color]="getEstadoColor()"></ion-icon>
+          <ion-label>
+            <h3>{{ getEstadoTexto() }}</h3>
+            <p>Estado actual</p>
+          </ion-label>
+        </ion-item>
+      </ion-card-content>
+    </ion-card>
+  
+    <!-- Almuerzos del día -->
+    <ion-card *ngIf="comanda.itemsAlmuerzo && comanda.itemsAlmuerzo.length > 0">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="restaurant-outline" class="ion-margin-end"></ion-icon>
+          Almuerzos del Día ({{ comanda.itemsAlmuerzo.length }})
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list>
+          <ion-item *ngFor="let item of comanda.itemsAlmuerzo; let i = index">
+            <ion-label>
+              <h3>{{ i + 1 }}. {{ item.proteina }}</h3>
+              <p *ngIf="item.principio">Principio: {{ item.principio }}</p>
+              <p *ngIf="item.sopa">Sopa: {{ item.sopa }}</p>
+              <p *ngIf="item.jugo">Jugo: {{ item.jugo }}</p>
+              <p>Arroz: {{ item.arroz === 'Sí' ? 'Sí' : 'No' }}</p> <!-- ✅ AÑADIR ESTA LÍNEA -->
+            </ion-label>
+            <ion-note slot="end" color="success">
+              ${{ formatearNumero(item.valorTotal) }}
+            </ion-note>
+          </ion-item>
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+  
+  
+    <!-- Platos especiales -->
+    <ion-card *ngIf="comanda.itemsEspeciales && comanda.itemsEspeciales.length > 0">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="star-outline" class="ion-margin-end"></ion-icon>
+          Platos Especiales ({{ comanda.itemsEspeciales.length }})
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list>
+          <ion-item *ngFor="let item of comanda.itemsEspeciales; let i = index">
+            <ion-label>
+              <h3>{{ i + 1 }}. {{ item.plato }}</h3>
+              <p>Cantidad: {{ item.cantidad }}</p>
+              <p>Precio unitario: ${{ formatearNumero(item.precioUnitario) }}</p>
+            </ion-label>
+            <ion-note slot="end" color="success">
+              ${{ formatearNumero(item.valorTotal) }}
+            </ion-note>
+          </ion-item>
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+  
+  
+  
+    <!-- Bebidas -->
+    <ion-card *ngIf="comanda.itemsBebidas && comanda.itemsBebidas.length > 0">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="beer-outline" class="ion-margin-end"></ion-icon>
+          Bebidas ({{ comanda.itemsBebidas.length }})
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list>
+          <ion-item *ngFor="let bebida of comanda.itemsBebidas; let i = index">
+            <ion-label>
+              <h3>{{ i + 1 }}. {{ bebida.bebida }}</h3>
+              <p>Categoría: {{ bebida.categoria }}</p>
+              <p>Cantidad: {{ bebida.cantidad }}</p>
+              <p>Precio unitario: ${{ formatearNumero(bebida.precioUnitario) }}</p>
+            </ion-label>
+            <ion-note slot="end" color="success">
+              ${{ formatearNumero(bebida.valorTotal) }}
+            </ion-note>
+          </ion-item>
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+  
+    <!-- Adicionales -->
+    <ion-card *ngIf="comanda.itemsAdicionales && comanda.itemsAdicionales.length > 0">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="add-circle-outline" class="ion-margin-end"></ion-icon>
+          Adicionales ({{ comanda.itemsAdicionales.length }})
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list>
+          <ion-item *ngFor="let adicional of comanda.itemsAdicionales; let i = index">
+            <ion-label>
+              <h3>{{ i + 1 }}. {{ adicional.adicional }}</h3>
+              <p>Cantidad: {{ adicional.cantidad }}</p>
+              <p>Precio unitario: ${{ formatearNumero(adicional.precioUnitario) }}</p>
+            </ion-label>
+            <ion-note slot="end" color="success">
+              ${{ formatearNumero(adicional.valorTotal) }}
+            </ion-note>
+          </ion-item>
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+  
+    <!-- Resumen -->
+    <ion-card>
+      <ion-card-content>
+        <ion-item lines="none">
+          <ion-label>
+            <h2>Total del Pedido</h2>
+          </ion-label>
+          <ion-note slot="end" color="success">
+            <h2>${{ formatearNumero(comanda.total) }}</h2>
+          </ion-note>
+        </ion-item>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <ion-button expand="block" fill="clear" (click)="cerrarModal()">
+      Cerrar
+    </ion-button>
+  </ion-toolbar>
+</ion-footer>

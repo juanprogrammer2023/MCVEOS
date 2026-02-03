@@ -4,13 +4,25 @@ import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 const routes: Routes = [
   {
     path: '',
-    redirectTo: 'folder/inbox',
+    redirectTo: 'mesas',
     pathMatch: 'full'
   },
   {
     path: 'folder/:id',
-    loadChildren: () => import('./folder/folder.module').then( m => m.FolderPageModule)
-  }
+    loadChildren: () => import('./folder/folder.module').then(m => m.FolderPageModule)
+  },
+  {
+    path: 'mesas',
+    loadChildren: () => import('./pages/mesas/mesas.module').then(m => m.MesasPageModule)
+  },
+  {
+    path: 'admin',
+    loadChildren: () => import('./pages/admin/admin.module').then( m => m.AdminPageModule)
+  },
+  {
+    path: 'admin',
+    loadChildren: () => import('./pages/admin/admin.module').then( m => m.AdminPageModule)
+  },
 ];
 
 @NgModule({

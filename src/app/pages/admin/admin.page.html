@@ -1,0 +1,442 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Admin</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div *ngIf="accessGranted; else noAccess" class="ion-padding">
+
+    <!-- Implementación de Tabs principales -->
+    <ion-segment [(ngModel)]="selectedTab" (ionChange)="segmentChanged($event)" color="primary">
+      <ion-segment-button value="menu">
+        <ion-label>Menú</ion-label>
+        <ion-icon name="restaurant-outline"></ion-icon>
+      </ion-segment-button>
+      <ion-segment-button value="comandas">
+        <ion-label>Comandas</ion-label>
+        <ion-icon name="receipt-outline"></ion-icon>
+      </ion-segment-button>
+    </ion-segment>
+
+    <!-- Tab de Menú -->
+    <div *ngIf="selectedTab === 'menu'" #menuContent>
+      <div *ngIf="cargandoDatosMenu" class="loading-container">
+        <ion-card>
+          <ion-card-content class="ion-text-center">
+            <ion-spinner name="crescent" color="primary"></ion-spinner>
+            <p class="ion-margin-top">Cargando datos del menú...</p>
+          </ion-card-content>
+        </ion-card>
+      </div>
+      
+      <div *ngIf="!cargandoDatosMenu">
+        <!-- Configuración de mesas siempre visible al inicio -->
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Configuración de Mesas</ion-card-title>
+            <ion-card-subtitle>Gestiona las mesas disponibles en el restaurante</ion-card-subtitle>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-item>
+              <ion-label position="stacked">Número de mesas disponibles</ion-label>
+              <ion-input type="number" [(ngModel)]="numeroMesasDisponibles" placeholder="Ej: 20" min="1" max="100">
+              </ion-input>
+            </ion-item>
+
+            <div class="ion-margin-top">
+              <ion-text color="medium">
+                <p>Actualmente hay <strong>{{ numeroMesasDisponibles || 0 }}</strong> mesas configuradas</p>
+              </ion-text>
+            </div>
+
+            <ion-button expand="block" color="primary" (click)="guardarConfiguracionMesas()"
+              [disabled]="!numeroMesasDisponibles || numeroMesasDisponibles < 1 || guardandoMesas">
+              <ion-spinner *ngIf="guardandoMesas" name="crescent" slot="start"></ion-spinner>
+              <ion-icon *ngIf="!guardandoMesas" name="restaurant" slot="start"></ion-icon>
+              {{ guardandoMesas ? 'Guardando...' : 'Guardar Configuración de Mesas' }}
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- Sub-tabs para las diferentes secciones del menú -->
+        <ion-segment [(ngModel)]="selectedMenuTab" (ionChange)="menuTabChanged($event)" color="secondary" class="ion-margin-top">
+          <ion-segment-button value="almuerzo-dia">
+            <ion-label>Almuerzo del Día</ion-label>
+            <ion-icon name="restaurant-outline"></ion-icon>
+          </ion-segment-button>
+          <ion-segment-button value="especial">
+            <ion-label>Especial</ion-label>
+            <ion-icon name="star-outline"></ion-icon>
+          </ion-segment-button>
+          <ion-segment-button value="bebidas">
+            <ion-label>Bebidas</ion-label>
+            <ion-icon name="wine-outline"></ion-icon>
+          </ion-segment-button>
+          <ion-segment-button value="adicionales">
+            <ion-label>Adicionales</ion-label>
+            <ion-icon name="add-circle-outline"></ion-icon>
+          </ion-segment-button>
+        </ion-segment>
+
+        <!-- Tab de Almuerzo del Día -->
+        <div *ngIf="selectedMenuTab === 'almuerzo-dia'" class="ion-margin-top" #almuerzoContent>
+          <ion-card>
+            <ion-card-header>
+              <ion-card-title>🍽️ Almuerzo del Día</ion-card-title>
+              <ion-card-subtitle>Configura los almuerzos del día</ion-card-subtitle>
+            </ion-card-header>
+
+            <ion-card-content>
+              <!-- Precio base -->
+              <ion-item>
+                <ion-label position="floating">💰 Precio base</ion-label>
+                <ion-input #precioBaseInput type="number" [(ngModel)]="almuerzoDelDia.valorBaseAlmuerzo" placeholder="Ej: 14000"
+                  class="ion-text-end">
+                </ion-input>
+              </ion-item>
+
+              <!-- Proteínas -->
+              <ion-list>
+                <ion-list-header>
+                  <ion-label>🥩 Proteínas</ion-label>
+                </ion-list-header>
+                <ion-item *ngFor="let proteina of almuerzoDelDia.proteinas; let i = index">
+                  {{ proteina }}
+                  <ion-button fill="clear" color="danger" slot="end" (click)="eliminarProteina(i)">
+                    <ion-icon name="trash"></ion-icon>
+                  </ion-button>
+                </ion-item>
+                <ion-item>
+                  <ion-input [(ngModel)]="nuevaProteina" placeholder="Agregar nueva proteína"></ion-input>
+                  <ion-button slot="end" (click)="agregarProteina()">Agregar</ion-button>
+                </ion-item>
+              </ion-list>
+
+              <!-- Principios -->
+              <ion-list>
+                <ion-list-header>
+                  <ion-label>🥗 Principios</ion-label>
+                </ion-list-header>
+                <ion-item *ngFor="let principio of almuerzoDelDia.principios; let i = index">
+                  {{ principio }}
+                  <ion-button fill="clear" color="danger" slot="end" (click)="eliminarPrincipio(i)">
+                    <ion-icon name="trash"></ion-icon>
+                  </ion-button>
+                </ion-item>
+                <ion-item>
+                  <ion-input [(ngModel)]="nuevoPrincipio" placeholder="Agregar nuevo principio"></ion-input>
+                  <ion-button (click)="agregarPrincipio()">Agregar</ion-button>
+                </ion-item>
+              </ion-list>
+
+              <!-- Jugos -->
+              <ion-list>
+                <ion-list-header>
+                  <ion-label>🥤 Jugos</ion-label>
+                </ion-list-header>
+                <ion-item *ngFor="let jugo of almuerzoDelDia.jugos; let i = index">
+                  {{ jugo }}
+                  <ion-button fill="clear" color="danger" slot="end" (click)="eliminarJugo(i)">
+                    <ion-icon name="trash"></ion-icon>
+                  </ion-button>
+                </ion-item>
+                <ion-item>
+                  <ion-input [(ngModel)]="nuevoJugo" placeholder="Agregar nuevo jugo"></ion-input>
+                  <ion-button (click)="agregarJugo()">Agregar</ion-button>
+                </ion-item>
+              </ion-list>
+
+              <!-- Sopas -->
+              <ion-list>
+                <ion-list-header>
+                  <ion-label>🍲 Sopas</ion-label>
+                </ion-list-header>
+                <ion-item *ngFor="let sopa of almuerzoDelDia.sopas; let i = index">
+                  {{ sopa }}
+                  <ion-button fill="clear" color="danger" slot="end" (click)="eliminarSopa(i)">
+                    <ion-icon name="trash"></ion-icon>
+                  </ion-button>
+                </ion-item>
+                <ion-item>
+                  <ion-input [(ngModel)]="nuevaSopa" placeholder="Agregar nueva sopa"></ion-input>
+                  <ion-button (click)="agregarSopa()">Agregar</ion-button>
+                </ion-item>
+              </ion-list>
+            </ion-card-content>
+          </ion-card>
+
+          <ion-button expand="block" color="success" (click)="guardarAlmuerzoDelDia()" [disabled]="guardandoAlmuerzoDelDia">
+            <ion-spinner *ngIf="guardandoAlmuerzoDelDia" name="crescent" slot="start"></ion-spinner>
+            <ion-icon *ngIf="!guardandoAlmuerzoDelDia" name="checkmark" slot="start"></ion-icon>
+            {{ guardandoAlmuerzoDelDia ? 'Guardando...' : 'Guardar Almuerzo del Día' }}
+          </ion-button>
+        </div>
+
+        <!-- Tab de Especiales -->
+        <div *ngIf="selectedMenuTab === 'especial'" class="ion-margin-top" #especialContent>
+          <ion-card>
+            <ion-card-header>
+              <ion-card-title>Almuerzos Especiales</ion-card-title>
+              <ion-card-subtitle>Gestiona los platos especiales del restaurante</ion-card-subtitle>
+            </ion-card-header>
+            <ion-card-content>
+              <ion-list>
+                <ion-item *ngFor="let especial of almuerzosEspeciales; let i = index">
+                  <ion-label>
+                    {{ especial.nombre }} - ${{ especial.precio }}
+                  </ion-label>
+                  <ion-button fill="clear" color="danger" slot="end" (click)="eliminarAlmuerzoEspecial(i)">
+                    <ion-icon name="trash"></ion-icon>
+                  </ion-button>
+                </ion-item>
+              </ion-list>
+
+              <ion-item>
+                <ion-input #especialNombreInput [(ngModel)]="nuevoEspecialNombre" placeholder="Nombre del especial"></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-input type="number" [(ngModel)]="nuevoEspecialPrecio" placeholder="Precio del especial"></ion-input>
+              </ion-item>
+
+              <ion-button expand="block" (click)="agregarAlmuerzoEspecial()">Agregar</ion-button>
+
+              <!-- Botón para guardar los especiales en Firestore -->
+              <ion-button expand="block" color="success" (click)="guardarAlmuerzosEspeciales()"
+                [disabled]="guardandoEspeciales">
+                <ion-spinner *ngIf="guardandoEspeciales" name="crescent" slot="start"></ion-spinner>
+                <ion-icon *ngIf="!guardandoEspeciales" name="checkmark" slot="start"></ion-icon>
+                {{ guardandoEspeciales ? 'Guardando...' : 'Guardar Almuerzos Especiales' }}
+              </ion-button>
+            </ion-card-content>
+          </ion-card>
+        </div>
+
+        <!-- Tab de Bebidas -->
+        <div *ngIf="selectedMenuTab === 'bebidas'" class="ion-margin-top" #bebidasContent>
+          <ion-card>
+            <ion-card-header>
+              <ion-card-title>
+                <ion-icon name="wine-outline" class="ion-margin-end"></ion-icon>
+                Bebidas
+              </ion-card-title>
+              <ion-card-subtitle>Gestiona el catálogo de bebidas</ion-card-subtitle>
+            </ion-card-header>
+            <ion-card-content>
+              <ion-list>
+                <ion-item *ngFor="let bebida of bebidas; let i = index">
+                  <ion-label>
+                    {{ bebida.nombre }} - {{ bebida.categoria }} - ${{ bebida.precio }}
+                  </ion-label>
+                  <ion-button fill="clear" color="danger" slot="end" (click)="eliminarBebida(i)">
+                    <ion-icon name="trash"></ion-icon>
+                  </ion-button>
+                </ion-item>
+              </ion-list>
+
+              <ion-item>
+                <ion-input #bebidaNombreInput [(ngModel)]="nuevaBebidaNombre" placeholder="Nombre de la bebida"></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-select [(ngModel)]="nuevaBebidaCategoria" placeholder="Categoría">
+                  <ion-select-option value="Gaseosas">Gaseosas</ion-select-option>
+                  <ion-select-option value="Jugos Naturales">Jugos Naturales</ion-select-option>
+                  <ion-select-option value="Bebidas Calientes">Bebidas Calientes</ion-select-option>
+                  <ion-select-option value="Cervezas">Cervezas</ion-select-option>
+                  <ion-select-option value="Aguas">Aguas</ion-select-option>
+                  <ion-select-option value="Bebidas Energéticas">Bebidas Energéticas</ion-select-option>
+                  <ion-select-option value="Otras">Otras</ion-select-option>
+                </ion-select>
+              </ion-item>
+              <ion-item>
+                <ion-input type="number" [(ngModel)]="nuevaBebidaPrecio" placeholder="Precio de la bebida"></ion-input>
+              </ion-item>
+
+              <ion-button expand="block" (click)="agregarBebida()">Agregar</ion-button>
+
+              <!-- Botón para guardar las bebidas en Firestore -->
+              <ion-button expand="block" color="success" (click)="guardarBebidas()" [disabled]="guardandoBebidas">
+                <ion-spinner *ngIf="guardandoBebidas" name="crescent" slot="start"></ion-spinner>
+                <ion-icon *ngIf="!guardandoBebidas" name="checkmark" slot="start"></ion-icon>
+                {{ guardandoBebidas ? 'Guardando...' : 'Guardar Bebidas' }}
+              </ion-button>
+            </ion-card-content>
+          </ion-card>
+        </div>
+
+        <!-- Tab de Adicionales -->
+        <div *ngIf="selectedMenuTab === 'adicionales'" class="ion-margin-top" #adicionalesContent>
+          <ion-card>
+            <ion-card-header>
+              <ion-card-title>
+                <ion-icon name="add-circle-outline" class="ion-margin-end"></ion-icon>
+                Adicionales Independientes
+              </ion-card-title>
+              <ion-card-subtitle>Gestiona los productos adicionales</ion-card-subtitle>
+            </ion-card-header>
+            <ion-card-content>
+              <ion-list>
+                <ion-item *ngFor="let adicional of adicionales; let i = index">
+                  <ion-label>
+                    {{ adicional.nombre }} - ${{ adicional.precio }}
+                  </ion-label>
+                  <ion-button fill="clear" color="danger" slot="end" (click)="eliminarAdicionalIndependiente(i)">
+                    <ion-icon name="trash"></ion-icon>
+                  </ion-button>
+                </ion-item>
+              </ion-list>
+
+              <ion-item>
+                <ion-input #adicionalNombreInput [(ngModel)]="nuevoAdicionalNombreIndependiente" placeholder="Nombre del adicional"></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-input type="number" [(ngModel)]="nuevoAdicionalPrecioIndependiente"
+                  placeholder="Precio del adicional"></ion-input>
+              </ion-item>
+
+              <ion-button expand="block" (click)="agregarAdicionalIndependiente()">Agregar</ion-button>
+
+              <!-- Botón para guardar los adicionales en Firestore -->
+              <ion-button expand="block" color="success" (click)="guardarAdicionalesIndependientes()"
+                [disabled]="guardandoAdicionales">
+                <ion-spinner *ngIf="guardandoAdicionales" name="crescent" slot="start"></ion-spinner>
+                <ion-icon *ngIf="!guardandoAdicionales" name="checkmark" slot="start"></ion-icon>
+                {{ guardandoAdicionales ? 'Guardando...' : 'Guardar Adicionales' }}
+              </ion-button>
+            </ion-card-content>
+          </ion-card>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab de Comandas -->
+    <div *ngIf="selectedTab === 'comandas'">
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="receipt-outline" class="ion-margin-end"></ion-icon>
+            Comandas Activas
+          </ion-card-title>
+          <ion-card-subtitle>Gestiona las órdenes en curso</ion-card-subtitle>
+        </ion-card-header>
+        <ion-card-content>
+          <!-- Filtros para comandas -->
+          <ion-segment [(ngModel)]="filtroComandas" (ionChange)="filtrarComandas($event)" color="secondary">
+            <ion-segment-button value="todas">
+              <ion-label>Todas</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="pendiente">
+              <ion-label>Pendientes</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="preparacion">
+              <ion-label>En preparación</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="lista">
+              <ion-label>Listas</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="entregada">
+              <ion-label>Entregadas</ion-label>
+            </ion-segment-button>
+          </ion-segment>
+
+          <!-- Lista de comandas -->
+          <div *ngIf="comandasFiltradas.length > 0; else noComandas">
+            <ion-list>
+              <ion-item-sliding *ngFor="let comanda of comandasFiltradas">
+                <ion-item>
+                  <ion-label>
+                    <h2>Comanda #{{ comanda.numeroComanda }}</h2>
+                    <p>{{ comanda.mesa }} | {{ getFechaComanda(comanda.fecha) | date:'short' }}</p>
+                    <p>Total: ${{ comanda.total | number }}</p>
+                  </ion-label>
+                  <ion-badge [color]="getBadgeColor(comanda.estado)" slot="end">
+                    {{ getEstadoTexto(comanda.estado) }}
+                  </ion-badge>
+                </ion-item>
+
+                <ion-item-options side="end">
+                  <ion-item-option color="primary" (click)="verDetalleComanda(comanda)">
+                    <ion-icon slot="icon-only" name="eye"></ion-icon>
+                  </ion-item-option>
+                  <ion-item-option color="success"
+                    (click)="cambiarEstadoComanda(comanda, getNextEstado(comanda.estado))">
+                    <ion-icon slot="icon-only" name="arrow-forward"></ion-icon>
+                  </ion-item-option>
+                  <ion-item-option color="danger" (click)="cancelarComanda(comanda)">
+                    <ion-icon slot="icon-only" name="close"></ion-icon>
+                  </ion-item-option>
+                </ion-item-options>
+              </ion-item-sliding>
+            </ion-list>
+          </div>
+
+          <ng-template #noComandas>
+            <div class="ion-text-center ion-padding">
+              <ion-icon name="restaurant-outline" size="large" color="medium"></ion-icon>
+              <p>No hay comandas {{ filtroComandas !== 'todas' ? 'en este estado' : '' }}</p>
+            </div>
+          </ng-template>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Estadísticas de comandas -->
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="stats-chart-outline" class="ion-margin-end"></ion-icon>
+            Resumen del Día
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-grid>
+            <ion-row>
+              <ion-col size="6">
+                <div class="stat-box">
+                  <div class="stat-value">{{ totalComandasHoy }}</div>
+                  <div class="stat-label">Comandas</div>
+                </div>
+              </ion-col>
+              <ion-col size="6">
+                <div class="stat-box">
+                  <div class="stat-value">${{ ventasHoy | number }}</div>
+                  <div class="stat-label">Ventas</div>
+                </div>
+              </ion-col>
+            </ion-row>
+            <ion-row>
+              <ion-col size="4">
+                <div class="stat-box">
+                  <div class="stat-value">{{ comandasPendientes }}</div>
+                  <div class="stat-label">Pendientes</div>
+                </div>
+              </ion-col>
+              <ion-col size="4">
+                <div class="stat-box">
+                  <div class="stat-value">{{ comandasEnPreparacion }}</div>
+                  <div class="stat-label">En preparación</div>
+                </div>
+              </ion-col>
+              <ion-col size="4">
+                <div class="stat-box">
+                  <div class="stat-value">{{ comandasListas }}</div>
+                  <div class="stat-label">Listas</div>
+                </div>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Botones comunes para ambos tabs -->
+    <ion-button expand="block" color="medium" (click)="irAClient()">
+      Ir a Inicio
+    </ion-button>
+  </div>
+
+  <ng-template #noAccess>
+    <div class="ion-padding">
+      <p>Acceso denegado.</p>
+    </div>
+  </ng-template>
+</ion-content>

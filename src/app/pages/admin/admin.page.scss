@@ -1,0 +1,99 @@
+// Estilos para las estadísticas
+.stat-box {
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    background-color: rgba(var(--ion-color-primary-rgb), 0.1);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--ion-color-primary);
+  }
+  
+  .stat-label {
+    font-size: 0.8rem;
+    color: var(--ion-color-medium);
+  }
+  
+  // Estilos para los segmentos
+  ion-segment {
+    margin-bottom: 16px;
+  }
+  
+  // Estilos para las badges
+  ion-badge {
+    padding: 6px 8px;
+    border-radius: 4px;
+  }
+  
+  // Estilos para los iconos en los títulos
+  ion-card-title ion-icon {
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  
+  // Animación para las comandas
+  ion-item-sliding {
+    animation: fadeIn 0.3s ease-in;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  // Estilos para las tarjetas
+  ion-card {
+    margin-bottom: 16px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  ion-card-header {
+    padding-bottom: 8px;
+  }
+  
+  // Estilos para los botones
+  ion-button {
+    --border-radius: 8px;
+    margin-top: 8px;
+  }
+  
+  // Estilos para los items de lista
+  ion-item {
+    --border-radius: 8px;
+    margin-bottom: 4px;
+  }
+  
+  // Estilos para el contenido principal
+  .ion-padding {
+    padding-bottom: 32px;
+  }
+
+  .comanda-detalle-modal {
+    --width: 95%;
+    --max-width: 500px;
+    --height: 85%;
+    --border-radius: 16px;
+  }
+  
+  @media (min-width: 768px) {
+    .comanda-detalle-modal {
+      --width: 70%;
+      --max-width: 600px;
+      --height: 80%;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .comanda-detalle-modal {
+      --width: 50%;
+      --max-width: 700px;
+    }
+  }

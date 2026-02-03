@@ -1,0 +1,28 @@
+.mesa-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .mesa-numero {
+    font-weight: bold;
+    font-size: 0.9rem;
+  }
+  
+  .mesa-estado {
+    font-size: 0.7rem;
+    opacity: 0.8;
+  }
+  
+  ion-button[disabled] {
+    opacity: 0.5;
+  }
+  
+  ion-chip {
+    margin: 8px auto;
+    display: flex;
+    justify-content: center;
+  }
+
+  

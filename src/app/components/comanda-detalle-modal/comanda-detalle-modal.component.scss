@@ -1,0 +1,73 @@
+ion-card {
+    margin-bottom: 16px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  ion-item {
+    --padding-start: 0;
+    --inner-padding-end: 0;
+  }
+  
+  ion-note h2 {
+    margin: 0;
+    font-weight: bold;
+    font-size: 1.2rem;
+  }
+  
+  .ion-margin-end {
+    margin-right: 8px;
+  }
+  
+  ion-card-title {
+    display: flex;
+    align-items: center;
+    font-size: 1.1rem;
+  }
+  
+  ion-label h3 {
+    margin: 4px 0;
+    font-weight: 600;
+  }
+  
+  ion-label p {
+    margin: 2px 0;
+    color: var(--ion-color-medium);
+    font-size: 0.9rem;
+  }
+  
+  ion-footer ion-button {
+    margin: 8px 16px;
+  }
+  
+  // Estilos para diferentes estados
+  .estado-pendiente {
+    border-left: 4px solid var(--ion-color-warning);
+  }
+  
+  .estado-preparacion {
+    border-left: 4px solid var(--ion-color-primary);
+  }
+  
+  .estado-lista {
+    border-left: 4px solid var(--ion-color-success);
+  }
+  
+  .estado-entregada {
+    border-left: 4px solid var(--ion-color-medium);
+  }
+  
+  .estado-cancelada {
+    border-left: 4px solid var(--ion-color-danger);
+  }
+  
+  // Responsive
+  @media (min-width: 768px) {
+    ion-card {
+      margin-bottom: 20px;
+    }
+    
+    ion-card-title {
+      font-size: 1.3rem;
+    }
+  }

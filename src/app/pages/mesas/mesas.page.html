@@ -1,0 +1,397 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Comanda Almuerzo</ion-title>
+  </ion-toolbar>
+</ion-header>
+<ion-content class="ion-padding">
+
+  <ion-content [fullscreen]="true">
+    <!-- Sección de Selección de Mesa -->
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="restaurant" slot="start"></ion-icon>
+          Seleccionar Mesa
+        </ion-card-title>
+        <ion-card-subtitle>
+          Elige una mesa disponible para tu pedido
+        </ion-card-subtitle>
+      </ion-card-header>
+
+      <ion-card-content>
+        <!-- Mientras se cargan las mesas, solo se muestra esto -->
+        <ng-container *ngIf="cargandoMesas; else contenidoMesas">
+          <div class="ion-text-center ion-padding">
+            <ion-spinner></ion-spinner>
+            <p>Cargando mesas disponibles...</p>
+          </div>
+        </ng-container>
+
+
+        <!-- Contenido que se carga cuando ya no está cargando -->
+        <ng-template #contenidoMesas>
+          <!-- Si hay mesas disponibles -->
+          <div *ngIf="mesasDisponibles.length > 0; else noHayMesas">
+            <ion-grid>
+              <ion-row>
+                <ion-col size="4" *ngFor="let mesa of mesasDisponibles">
+                  <ion-button expand="block" [fill]="mesaSeleccionada === mesa.numero ? 'solid' : 'outline'"
+                    [color]="mesa.disponible ? (mesaSeleccionada === mesa.numero ? 'primary' : 'medium') : 'danger'"
+                    (click)="seleccionarMesa(mesa)">
+                    <div class="mesa-info">
+                      <ion-icon [name]="mesa.disponible ? 'checkmark-circle' : 'close-circle'" slot="start"></ion-icon>
+                      <div>
+                        <div class="mesa-numero">Mesa {{ mesa.numero }}</div>
+                        <div class="mesa-estado">
+                          {{ mesa.disponible ? 'Disponible' : 'Ocupada' }}
+                        </div>
+                      </div>
+                    </div>
+                  </ion-button>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+
+            <div *ngIf="mesaSeleccionada" class="ion-margin-top">
+              <ion-chip color="success">
+                <ion-icon name="checkmark-circle" slot="start"></ion-icon>
+                <ion-label>Mesa {{ mesaSeleccionada }} seleccionada</ion-label>
+              </ion-chip>
+            </div>
+          </div>
+
+          <!-- Si no hay mesas -->
+          <ng-template #noHayMesas>
+            <div class="ion-text-center ion-padding">
+              <ion-icon name="alert-circle" size="large" color="warning"></ion-icon>
+              <p>No hay mesas configuradas. Contacte al administrador.</p>
+            </div>
+          </ng-template>
+        </ng-template>
+      </ion-card-content>
+    </ion-card>
+
+
+    <!-- Segmento con Bebidas agregado -->
+    <ion-segment [(ngModel)]="tipoActual" (ionChange)="cambiarTipoForm()">
+      <ion-segment-button value="almuerzo">
+        <ion-label>Almuerzo</ion-label>
+        <ion-icon name="restaurant-outline"></ion-icon>
+      </ion-segment-button>
+      <ion-segment-button value="especial">
+        <ion-label>Especial</ion-label>
+        <ion-icon name="star-outline"></ion-icon>
+      </ion-segment-button>
+      <ion-segment-button value="bebidas">
+        <ion-label>Bebidas</ion-label>
+        <ion-icon name="wine-outline"></ion-icon>
+      </ion-segment-button>
+      <ion-segment-button value="adicionales">
+        <ion-label>Adicionales</ion-label>
+        <ion-icon name="add-circle-outline"></ion-icon>
+      </ion-segment-button>
+    </ion-segment>
+
+    <!-- Formulario para almuerzos regulares -->
+    <form *ngIf="tipoActual === 'almuerzo'" [formGroup]="itemForm" (ngSubmit)="agregarItem()">
+      <ion-item>
+        <ion-label>Proteína</ion-label>
+        <ion-select formControlName="proteina" placeholder="Selecciona una proteína">
+          <ion-select-option *ngFor="let p of almuerzoDelDia?.proteinas" [value]="p">{{ p }}</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Principio</ion-label>
+        <ion-select formControlName="principio" placeholder="Selecciona un principio">
+          <ion-select-option value="Ninguno">Ninguno</ion-select-option>
+          <ion-select-option *ngFor="let p of almuerzoDelDia?.principios" [value]="p">{{ p }}</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Sopa</ion-label>
+        <ion-select formControlName="sopa" placeholder="Selecciona una sopa">
+          <ion-select-option value="Ninguno">Ninguno</ion-select-option>
+          <ion-select-option *ngFor="let s of almuerzoDelDia?.sopas" [value]="s">{{ s }}</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Arroz</ion-label>
+        <ion-select formControlName="arroz" placeholder="¿Incluir arroz?">
+          <ion-select-option value="Sí">Sí</ion-select-option>
+          <ion-select-option value="Ninguno">Ninguno</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Jugo</ion-label>
+        <ion-select formControlName="jugo" placeholder="Selecciona un jugo">
+          <ion-select-option value="Ninguno">Ninguno</ion-select-option>
+          <ion-select-option *ngFor="let j of almuerzoDelDia?.jugos" [value]="j">{{ j }}</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Valor Total</ion-label>
+        <ion-text slot="end" class="ion-text-right" style="font-weight: bold;">
+          {{ itemForm.get('valorTotal')?.value | currency:'COP':'symbol':'1.0-0' }}
+        </ion-text>
+      </ion-item>
+
+      <ion-button expand="block" type="submit" [disabled]="itemForm.invalid">
+        Agregar a Comanda
+      </ion-button>
+    </form>
+
+    <!-- Formulario para platos especiales -->
+    <form *ngIf="tipoActual === 'especial'" [formGroup]="itemForm" (ngSubmit)="agregarItem()">
+      <ion-item>
+        <ion-label>Plato Especial</ion-label>
+        <ion-select formControlName="platoEspecial" placeholder="Selecciona un plato especial">
+          <ion-select-option *ngFor="let e of especialesDelDia" [value]="e.nombre">
+            {{ e.nombre }} - {{ e.precio | currency:'COP':'symbol':'1.0-0' }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <!-- NUEVO: Campo de cantidad -->
+      <ion-item>
+        <ion-label position="floating">Cantidad</ion-label>
+        <ion-input type="number" formControlName="cantidad" min="1" max="20" placeholder="1"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Valor Total</ion-label>
+        <ion-text slot="end" class="ion-text-right" style="font-weight: bold;">
+          {{ itemForm.get('valorTotal')?.value | currency:'COP':'symbol':'1.0-0' }}
+        </ion-text>
+      </ion-item>
+
+      <ion-button expand="block" type="submit" [disabled]="itemForm.invalid">
+        Agregar a Comanda
+      </ion-button>
+    </form>
+
+
+    <!-- NUEVO: Formulario para bebidas -->
+    <form *ngIf="tipoActual === 'bebidas'" [formGroup]="itemForm" (ngSubmit)="agregarItem()">
+      <ion-item>
+        <ion-label>Categoría</ion-label>
+        <ion-select [(ngModel)]="categoriaSeleccionada" [ngModelOptions]="{standalone: true}"
+          (ionChange)="filtrarBebidasPorCategoria()" placeholder="Selecciona una categoría">
+          <ion-select-option *ngFor="let categoria of categoriasDisponibles" [value]="categoria">
+            {{ categoria }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Bebida</ion-label>
+        <ion-select formControlName="bebida" placeholder="Selecciona una bebida">
+          <ion-select-option *ngFor="let b of bebidasFiltradas" [value]="b.nombre">
+            {{ b.nombre }} - {{ b.precio | currency:'COP':'symbol':'1.0-0' }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="floating">Cantidad</ion-label>
+        <ion-input type="number" formControlName="cantidad" min="1" max="10" placeholder="1">
+        </ion-input>
+      </ion-item>
+
+
+      <ion-item>
+        <ion-label>Valor Total</ion-label>
+        <ion-text slot="end" class="ion-text-right" style="font-weight: bold;">
+          {{ itemForm.get('valorTotal')?.value | currency:'COP':'symbol':'1.0-0' }}
+        </ion-text>
+      </ion-item>
+
+      <ion-button expand="block" type="submit" [disabled]="itemForm.invalid">
+        Agregar a Comanda
+      </ion-button>
+    </form>
+
+    <!-- NUEVO: Formulario para adicionales -->
+    <form *ngIf="tipoActual === 'adicionales'" [formGroup]="itemForm" (ngSubmit)="agregarItem()">
+      <ion-item>
+        <ion-label>Adicional</ion-label>
+        <ion-select formControlName="adicional" placeholder="Selecciona un adicional">
+          <ion-select-option *ngFor="let a of adicionalesDisponibles" [value]="a.nombre">
+            {{ a.nombre }} - {{ a.precio | currency:'COP':'symbol':'1.0-0' }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="floating">Cantidad</ion-label>
+        <ion-input type="number" formControlName="cantidad" min="1" max="10" placeholder="1">
+        </ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Valor Total</ion-label>
+        <ion-text slot="end" class="ion-text-right" style="font-weight: bold;">
+          {{ itemForm.get('valorTotal')?.value | currency:'COP':'symbol':'1.0-0' }}
+        </ion-text>
+      </ion-item>
+
+      <ion-button expand="block" type="submit" [disabled]="itemForm.invalid">
+        Agregar a Comanda
+      </ion-button>
+    </form>
+
+
+    <div id="comanda-activa">
+      <!-- Lista Almuerzos -->
+      <ion-list *ngIf="itemsAlmuerzo.length > 0">
+        <ion-list-header>Items Almuerzo</ion-list-header>
+        <ion-item *ngFor="let item of itemsAlmuerzo">
+          <ion-label>
+            <h2>{{ item.proteina }}</h2>
+            <p>
+              {{ item.principio || 'Sin principio' }} - {{ item.sopa || 'Sin sopa' }}<br>
+              Jugo: {{ item.jugo || 'Sin jugo' }} -
+              Arroz: {{ item.arroz === 'Sí' ? 'Sí' : 'No' }} <!-- ✅ AÑADIR ESTA PARTE -->
+            </p>
+            <p><strong>Valor: {{ item.valorTotal | currency:'COP':'symbol':'1.0-0' }}</strong></p>
+          </ion-label>
+          <ion-button slot="end" color="danger" fill="clear" (click)="eliminarItem(item.id, 'almuerzo')">
+            <ion-icon name="trash"></ion-icon>
+          </ion-button>
+        </ion-item>
+      </ion-list>
+
+      <!-- Lista Especiales -->
+      <ion-list *ngIf="itemsEspeciales.length > 0">
+        <ion-list-header>Items Especiales</ion-list-header>
+        <ion-item *ngFor="let item of itemsEspeciales">
+          <ion-label>
+            <h2>{{ item.plato }}</h2>
+
+            <!-- Added "Cantidad:" label before the counter -->
+            <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+              <span style="font-size:14px; font-weight:500; margin-right:4px;">Cantidad:</span>
+              <ion-button size="small" shape="round" fill="outline" color="medium"
+                style="--border-width: 1px; --border-color: #d4d4d8; --color: #71717a; width: 20px; height: 20px; font-size: 14px; font-weight: 500;"
+                (click)="cambiarCantidadEspecial(item, -1)">−</ion-button>
+
+              <div style="min-width:32px; text-align:center; font-weight:500;  font-size:15px;">{{ item.cantidad }}
+              </div>
+
+              <ion-button size="small" shape="round" fill="outline" color="medium"
+                style="--border-width: 1px; --border-color: #d4d4d8; --color: #71717a; width: 20px; height: 20px; font-size: 14px; font-weight: 500;"
+                (click)="cambiarCantidadEspecial(item, 1)">+</ion-button>
+            </div>
+
+            <p style="margin-top:4px;"><strong>Total:</strong> {{ item.valorTotal | currency:'COP':'symbol':'1.0-0' }}
+            </p>
+          </ion-label>
+
+          <ion-button slot="end" color="danger" fill="clear" (click)="eliminarItem(item.id, 'especial')">
+            <ion-icon name="trash"></ion-icon>
+          </ion-button>
+        </ion-item>
+      </ion-list>
+
+      <!-- Lista Bebidas -->
+      <ion-list *ngIf="itemsBebidas.length > 0">
+        <ion-list-header>
+          <ion-icon name="wine-outline" slot="start"></ion-icon>
+          Items Bebidas
+        </ion-list-header>
+
+        <ion-item *ngFor="let item of itemsBebidas">
+          <ion-label>
+            <h2>{{ item.bebida }}</h2>
+            <p>{{ item.categoria }}</p>
+
+            <!-- Added "Cantidad:" label before the counter -->
+            <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+              <span style="font-size:14px; font-weight:500; margin-right:4px;">Cantidad:</span>
+              <ion-button size="small" shape="round" fill="outline" color="medium"
+                style="--border-width: 1px; --border-color: #d4d4d8; --color: #71717a; width: 20px; height: 20px; font-size: 14px; font-weight: 500;"
+                (click)="cambiarCantidadBebida(item, -1)">−</ion-button>
+
+              <div style="min-width:32px; text-align:center; font-weight:500;  font-size:15px;">{{ item.cantidad }}
+              </div>
+
+              <ion-button size="small" shape="round" fill="outline" color="medium"
+                style="--border-width: 1px; --border-color: #d4d4d8; --color: #71717a; width: 20px; height: 20px; font-size: 14px; font-weight: 500;"
+                (click)="cambiarCantidadBebida(item, 1)">+</ion-button>
+            </div>
+
+            <p style="margin-top:4px;"><strong>Valor:</strong> {{ item.valorTotal | currency:'COP':'symbol':'1.0-0' }}
+            </p>
+          </ion-label>
+
+          <ion-button slot="end" color="danger" fill="clear" (click)="eliminarItem(item.id, 'bebidas')">
+            <ion-icon name="trash"></ion-icon>
+          </ion-button>
+        </ion-item>
+      </ion-list>
+
+      <!-- Lista Adicionales -->
+      <ion-list *ngIf="itemsAdicionales.length > 0">
+        <ion-list-header>
+          <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+          Items Adicionales
+        </ion-list-header>
+
+        <ion-item *ngFor="let item of itemsAdicionales">
+          <ion-label>
+            <h2>{{ item.adicional }}</h2>
+
+            <!-- Added "Cantidad:" label before the counter -->
+            <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+              <span style="font-size:14px; font-weight:500; margin-right:4px;">Cantidad:</span>
+              <ion-button size="small" shape="round" fill="outline" color="medium"
+                style="--border-width: 1px; --border-color: #d4d4d8; --color: #71717a; width: 20px; height: 20px; font-size: 14px; font-weight: 500;"
+                (click)="cambiarCantidadAdicional(item, -1)">−</ion-button>
+
+              <div style="min-width:32px; text-align:center; font-weight:500;  font-size:15px;">{{ item.cantidad }}
+              </div>
+
+              <ion-button size="small" shape="round" fill="outline" color="medium"
+                style="--border-width: 1px; --border-color: #d4d4d8; --color: #71717a; width: 20px; height: 20px; font-size: 14px; font-weight: 500;"
+                (click)="cambiarCantidadAdicional(item, 1)">+</ion-button>
+            </div>
+
+            <p style="margin-top:4px;"><strong>Valor:</strong> {{ item.valorTotal | currency:'COP':'symbol':'1.0-0' }}
+            </p>
+          </ion-label>
+
+          <ion-button slot="end" color="danger" fill="clear" (click)="eliminarItem(item.id, 'adicionales')">
+            <ion-icon name="trash"></ion-icon>
+          </ion-button>
+        </ion-item>
+      </ion-list>
+
+
+
+    </div>
+
+    <!-- Total y botones de acción -->
+    <ion-item *ngIf="itemsAlmuerzo.length + itemsEspeciales.length + itemsBebidas.length + itemsAdicionales.length > 0">
+      <ion-label><strong>Total Comanda:</strong></ion-label>
+      <ion-text slot="end" class="ion-text-right" style="font-weight: bold; font-size: 1.2em;">
+        {{ calcularTotal() | currency:'COP':'symbol':'1.0-0' }}
+      </ion-text>
+    </ion-item>
+
+    <div class="ion-padding">
+      <ion-button expand="block" color="success" (click)="enviarACocinero()"
+        [disabled]="itemsAlmuerzo.length + itemsEspeciales.length + itemsBebidas.length + itemsAdicionales.length === 0">
+        Enviar Comanda a Cocina
+      </ion-button>
+
+      <ion-button expand="block" color="medium" (click)="irAAdmin()">
+        Ir a Admin
+      </ion-button>
+    </div>
+
+  </ion-content>
+</ion-content>
